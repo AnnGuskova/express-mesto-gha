@@ -1,4 +1,6 @@
 const mongoose = require('mongoose');
+const { isURL } = require('validator');
+const { VALIDATION_ERROR } = require('../utils/constants').ERROR_MESSAGES;
 
 const cardSchema = new mongoose.Schema({
   name: {
@@ -10,6 +12,10 @@ const cardSchema = new mongoose.Schema({
   link: {
     type: String,
     required: true,
+    validate: {
+      validator: (link) => isURL(link),
+      message: VALIDATION_ERROR,
+    },
   },
   owner: {
     type: mongoose.Schema.Types.ObjectId,

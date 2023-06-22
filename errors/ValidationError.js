@@ -1,10 +1,14 @@
-const { errorNames, errorCodes, errorMessages } = require('../utils/constants');
+const {
+  ERROR_NAMES,
+  ERROR_CODES,
+  ERROR_MESSAGES,
+} = require('../utils/constants');
 
 class ValidationError extends Error {
   constructor(message) {
-    super(message ?? errorMessages.validation);
-    this.name = errorNames.validation;
-    this.statusCode = errorCodes.validation;
+    super(message ?? ERROR_MESSAGES.VALIDATION_ERROR);
+    this.name = ERROR_NAMES.VALIDATION_ERROR;
+    this.statusCode = ERROR_CODES.VALIDATION_ERROR;
   }
 }
 

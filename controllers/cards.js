@@ -1,15 +1,13 @@
 const Card = require('../models/card');
-const { errorNames } = require('../utils/constants');
-const ValidationError = require('../errors/ValidationError');
-const CastError = require('../errors/CastError');
+const { ERROR_NAMES } = require('../utils/constants');
+const ForbiddenError = require('../errors/ForbiddenError');
 const NotFoundError = require('../errors/NotFoundError');
+const ValidationError = require('../errors/ValidationError');
 
 module.exports.getCards = (req, res, next) => {
   Card.find({})
     .then((cards) => res.send(cards))
-    .catch(() => {
-      next(new Error());
-    });
+    .catch(next);
 };
 
 module.exports.createCard = (req, res, next) => {
@@ -19,36 +17,38 @@ module.exports.createCard = (req, res, next) => {
     link,
     owner: req.user._id,
   })
-    .then((card) => res.send(card))
+    .then((card) => res.status(201).send(card))
     .catch((err) => {
       switch (err.name) {
-        case errorNames.validation:
+        case ERROR_NAMES.VALIDATION_ERROR:
           next(new ValidationError());
           break;
         default:
-          next(new Error());
+          next(err);
       }
     });
 };
 
 module.exports.deleteCard = (req, res, next) => {
-  Card.findByIdAndRemove(req.params.cardId)
+  Card.findById(req.params.cardId)
     .then((card) => {
       if (!card) {
         next(new NotFoundError());
         return;
       }
-      res.send(card);
-    })
-    .catch((err) => {
-      switch (err.name) {
-        case errorNames.cast:
-          next(new CastError());
-          break;
-        default:
-          next(new Error());
+      if (req.user._id !== card.owner.toString()) {
+        next(new ForbiddenError());
+        return;
       }
-    });
+      Card.deleteOne({
+        _id: req.params.cardId,
+      })
+        .then((deleteResult) => {
+          res.send(deleteResult);
+        })
+        .catch(next);
+    })
+    .catch(next);
 };
 
 module.exports.likeCard = (req, res, next) => {
@@ -64,15 +64,7 @@ module.exports.likeCard = (req, res, next) => {
       }
       res.send(card);
     })
-    .catch((err) => {
-      switch (err.name) {
-        case errorNames.cast:
-          next(new CastError());
-          break;
-        default:
-          next(new Error());
-      }
-    });
+    .catch(next);
 };
 
 module.exports.dislikeCard = (req, res, next) => {
@@ -88,13 +80,5 @@ module.exports.dislikeCard = (req, res, next) => {
       }
       res.send(card);
     })
-    .catch((err) => {
-      switch (err.name) {
-        case errorNames.cast:
-          next(new CastError());
-          break;
-        default:
-          next(new Error());
-      }
-    });
+    .catch(next);
 };

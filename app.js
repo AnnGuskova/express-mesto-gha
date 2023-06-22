@@ -1,46 +1,48 @@
-const { PORT = 3000 } = process.env;
-
 const express = require('express');
-const NotFoundError = require('./errors/NotFoundError');
+const { connect, connection } = require('mongoose');
+const {
+  EXPRESS_ENABLE_EXTENDED_URL_ENCODE,
+  EXPRESS_RATE_LIMIT_LEGACY_HEADERS,
+  EXPRESS_RATE_LIMIT_MAX,
+  EXPRESS_RATE_LIMIT_STANDARD_HEADERS,
+  EXPRESS_RATE_LIMIT_WINDOW_MS,
+  EXPRESS_SERVER_PORT,
+  MONGOOSE_AUTO_INDEX,
+  MONGOOSE_CONNECTION_STRING,
+  MONGOOSE_USE_NEW_URL_PARSER,
+  MONGOOSE_USE_UNIFIED_TOPOLOGY,
+} = require('./environment');
+
+const { PORT = EXPRESS_SERVER_PORT } = process.env;
+
+connect(MONGOOSE_CONNECTION_STRING, {
+  useUnifiedTopology: MONGOOSE_USE_UNIFIED_TOPOLOGY,
+  useNewUrlParser: MONGOOSE_USE_NEW_URL_PARSER,
+  autoIndex: MONGOOSE_AUTO_INDEX,
+});
+connection.syncIndexes().catch(global.console.error);
 
 const app = express();
 
-require('mongoose').connect('mongodb://127.0.0.1:27017/mestodb', {
-  useUnifiedTopology: true,
-  useNewUrlParser: true,
-  autoIndex: true,
-});
-
 app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(express.urlencoded({ extended: EXPRESS_ENABLE_EXTENDED_URL_ENCODE }));
 app.use(require('cookie-parser')());
 
-app.use(require('express-rate-limit')({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-  standardHeaders: true,
-  legacyHeaders: false,
-}));
+app.use(
+  require('express-rate-limit')({
+    windowMs: EXPRESS_RATE_LIMIT_WINDOW_MS,
+    max: EXPRESS_RATE_LIMIT_MAX,
+    standardHeaders: EXPRESS_RATE_LIMIT_STANDARD_HEADERS,
+    legacyHeaders: EXPRESS_RATE_LIMIT_LEGACY_HEADERS,
+  }),
+);
 
-app.use(require('helmet')());
+app.use(require('./routes'));
 
-app.use((req, res, next) => {
-  req.user = {
-    _id: '648888030fc5c6a7b0d64d75',
-  };
-
-  next();
-});
-
-app.use('/users', require('./routes/users'));
-app.use('/cards', require('./routes/cards'));
-
-app.all('*', (req, res, next) => {
-  next(new NotFoundError());
-});
+app.use(require('celebrate').errors());
 
 app.use(require('./errors/errorHandler'));
 
 app.listen(PORT, () => {
-  console.log(`App listening on port ${PORT}`);
+  global.console.log(`App listening on port ${PORT}`);
 });
