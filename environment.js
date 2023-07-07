@@ -11,7 +11,5 @@ module.exports = {
   EXPRESS_RATE_LIMIT_LEGACY_HEADERS: false,
   JWT_DEFAULT_SECRET: 'MESTO_JWT_SECRET',
   JWT_EXPIRES_IN: '7d',
-  JWT_HEADER_NAME: 'X-Auth',
-  JWT_HTTP_ONLY: true,
-  JWT_MAX_AGE: 3600000,
+  JWT_HEADER_NAME: 'authorization',
 };

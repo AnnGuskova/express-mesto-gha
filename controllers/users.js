@@ -1,12 +1,6 @@
 const { hash } = require('bcryptjs');
 const { sign } = require('jsonwebtoken');
-const {
-  JWT_DEFAULT_SECRET,
-  JWT_HEADER_NAME,
-  JWT_EXPIRES_IN,
-  JWT_HTTP_ONLY,
-  JWT_MAX_AGE,
-} = require('../environment');
+const { JWT_DEFAULT_SECRET, JWT_EXPIRES_IN } = require('../environment');
 const { ERROR_NAMES } = require('../utils/constants');
 const User = require('../models/user');
 const ConflictError = require('../errors/ConflictError');
@@ -139,15 +133,9 @@ module.exports.login = (req, res, next) => {
   const { email, password } = req.body;
   User.findUserByCredentials(email, password)
     .then(({ _id }) => {
-      res.cookie(
-        JWT_HEADER_NAME,
-        sign({ _id }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN }),
-        {
-          maxAge: JWT_MAX_AGE,
-          httpOnly: JWT_HTTP_ONLY,
-        },
-      );
-      res.send({ _id });
+      res.send({
+        token: sign({ _id }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN }),
+      });
     })
     .catch((err) => {
       switch (err.name) {

@@ -5,9 +5,9 @@ const AuthorizationError = require('../errors/AuthorizationError');
 const { JWT_SECRET = JWT_DEFAULT_SECRET } = process.env;
 
 module.exports = (req, res, next) => {
-  const token = req.cookies[JWT_HEADER_NAME];
+  const token = req.headers[JWT_HEADER_NAME];
   if (!token) {
-    next(new AuthorizationError());
+    next(new AuthorizationError(3));
     return;
   }
 
@@ -15,7 +15,7 @@ module.exports = (req, res, next) => {
   try {
     payload = jwt.verify(token, JWT_SECRET);
   } catch {
-    next(new AuthorizationError());
+    next(new AuthorizationError(4));
     return;
   }
 

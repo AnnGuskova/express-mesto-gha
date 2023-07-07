@@ -50,12 +50,12 @@ userSchema.statics.findUserByCredentials = function findUserByCredentials(
     .select('+password')
     .then((user) => {
       if (!user) {
-        return Promise.reject(new AuthorizationError());
+        return Promise.reject(new AuthorizationError(1));
       }
 
       return compare(password, user.password).then((matched) => {
         if (!matched) {
-          return Promise.reject(new AuthorizationError());
+          return Promise.reject(new AuthorizationError(2));
         }
 
         return user;
